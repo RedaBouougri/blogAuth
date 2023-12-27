@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.validation.Path;
 import javax.validation.Valid;
 
+import com.example.demo.security.springjwt.payload.request.UpdateProfileRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,8 +82,10 @@ public class AuthController {
 
     return ResponseEntity.ok(new JwtResponse(jwt, 
                          userDetails.getId(), 
-                         userDetails.getUsername(), 
-                         //userDetails.getEmail(),
+                         userDetails.getUsername(),
+                         userDetails.getFirstName(),
+                         userDetails.getLastName(),
+
                          roles));
     
     
@@ -138,11 +142,42 @@ public class AuthController {
       List<User> users = userRepository.findUser();
       return ResponseEntity.ok(users);
   }
-  
-  
-  
-  
-  
+
+
+
+  @PutMapping("/updateprofile/{username}")
+  public ResponseEntity<?> updateUserProfile(@Valid @RequestBody UpdateProfileRequest signupRequest,@PathVariable String username) {
+    // Retrieve the current authenticated user
+   // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUsername = username;
+    User currentUser = userRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new RuntimeException("User not found with username: " + currentUsername));
+
+    // Update user information
+    currentUser.setFirstName(signupRequest.getFirstName());
+    currentUser.setLastName(signupRequest.getLastName());
+    currentUser.setUsername(signupRequest.getUsername());
+
+    if(!encoder.matches(signupRequest.getOldPassword(), currentUser.getPassword())){
+      return ResponseEntity.badRequest().body(new MessageResponse("Error: Old password is incorrect."));
+    }
+    // Update password if provided
+    if (!signupRequest.getNewPassword().equals("")) {
+
+      if (encoder.matches(signupRequest.getOldPassword(), currentUser.getPassword())) {
+        currentUser.setPassword(encoder.encode(signupRequest.getNewPassword()));
+      } else {
+        return ResponseEntity.badRequest().body(new MessageResponse("Error: Old password is incorrect."));
+      }
+    }
+
+    // Save the updated user
+    userRepository.save(currentUser);
+
+    return ResponseEntity.ok(new MessageResponse("User profile updated successfully!"));
+  }
+
+
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {

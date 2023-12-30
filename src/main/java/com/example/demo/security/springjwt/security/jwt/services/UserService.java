@@ -27,14 +27,19 @@ public class UserService implements IDAO<User>{
 	}
 
 	@Override
-	public User save(User o) {
+	public User findById(int id) {
 		return null;
 	}
 
 	@Override
-	public User findById(int id) {
+	public User save(User o) {
+		return userRepository.save(o);
+	}
+
+
+	public User 	findById(Long id) {
 		// TODO Auto-generated method stub
-		return null;
+		return userRepository.findById(id).get();
 	}
 
 	@Override
@@ -49,6 +54,11 @@ public class UserService implements IDAO<User>{
 		
 	}
 
+	public void deleteById(Long o) {
+
+		userRepository.deleteById(o);
+
+	}
 	
 	
 	

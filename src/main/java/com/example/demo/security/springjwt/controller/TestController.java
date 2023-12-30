@@ -63,6 +63,11 @@ public class TestController {
         return userService.findByUsername(username);
     }
 
+    @GetMapping("/findbyid/{id}")
+    public User findById(@PathVariable Long id) {
+        return userService2.findById(id);
+    }
+
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
